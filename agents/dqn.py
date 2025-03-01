@@ -10,10 +10,9 @@ from tensorflow.keras.models import Model
 
 # -- Private Imports
 from utils import *
+from constants import *
 
 # -- Global Variables
-with open("config.yaml", "r") as f:
-    config = yaml.safe_load(f)
 
 # -- Functions
 
@@ -80,7 +79,7 @@ class BaseAgentDQN:
             q_vals_dist = self.model.predict(state, verbose=0)[0]
             action_idx = tf.argmax(q_vals_dist).numpy()
 
-        action = self.action_mapper.idx_to_action(action_idx)
+        action = self.action_mapper.idx_to_bool_action(action_idx)
         return action
 
     def sample(self):

@@ -1,14 +1,16 @@
 # config.yaml
 
 oran_env:
-  center_freq: 850e6
-  bandwidth: 20e6
+  center_freq: 850e6              # Hz
+  bandwidth: 20e6                 # Hz
+  bandwidth_per_rb: 2e5           # Hz
   num_gnb: 7
   num_rbs: 100
-  inter_distance_gnb: 1700
+  inter_distance_gnb: 1700        # m
   num_ues_per_gnb: 9
-  power_max: 15
-  tti: 1e-3
+  power_max: 15                   # dBm
+  tti: 1e-3                       # s
+  noise_power_density: 3.98e-21   # W/Hz
 
 drl_agent:
   max_step: 50
