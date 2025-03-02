@@ -1,0 +1,16 @@
+{"time":"2025-03-02T12:05:56.2774923+08:00","level":"INFO","msg":"stream: starting","core version":"0.19.7","symlink path":"C:\\Users\\13580\\PycharmProjects\\DRL_ORAN_Power\\wandb\\run-20250302_120556-gly46xf5\\logs\\debug-core.log"}
+{"time":"2025-03-02T12:05:57.7951538+08:00","level":"INFO","msg":"created new stream","id":"gly46xf5"}
+{"time":"2025-03-02T12:05:57.7951538+08:00","level":"INFO","msg":"stream: started","id":"gly46xf5"}
+{"time":"2025-03-02T12:05:57.7951538+08:00","level":"INFO","msg":"writer: Do: started","stream_id":"gly46xf5"}
+{"time":"2025-03-02T12:05:57.7951538+08:00","level":"INFO","msg":"sender: started","stream_id":"gly46xf5"}
+{"time":"2025-03-02T12:05:57.7957724+08:00","level":"INFO","msg":"handler: started","stream_id":"gly46xf5"}
+{"time":"2025-03-02T12:05:58.4724139+08:00","level":"INFO","msg":"Starting system monitor"}
+{"time":"2025-03-02T12:05:58.5197782+08:00","level":"INFO","msg":"Stopping system monitor"}
+{"time":"2025-03-02T12:05:59.2510674+08:00","level":"INFO","msg":"Stopped system monitor"}
+{"time":"2025-03-02T12:05:59.5309671+08:00","level":"INFO","msg":"handler: operation stats","stats":{"operations":[{"desc":"uploading wandb-metadata.json","runtime_seconds":0.7894868,"progress":"629B/629B"},{"desc":"uploading requirements.txt","runtime_seconds":0.7894868,"progress":"1.1KB/1.1KB"},{"desc":"uploading history steps 0-0, summary","runtime_seconds":0.5268577},{"desc":"updating run config","runtime_seconds":0.2786254},{"desc":"uploading output.log","runtime_seconds":0.0177535},{"desc":"uploading wandb-summary.json","runtime_seconds":0.0177535,"progress":"117B/117B"}],"total_operations":6}}
+{"time":"2025-03-02T12:06:00.2468347+08:00","level":"INFO","msg":"fileTransfer: Close: file transfer manager closed"}
+{"time":"2025-03-02T12:06:01.8630121+08:00","level":"INFO","msg":"stream: closing","id":"gly46xf5"}
+{"time":"2025-03-02T12:06:01.8630121+08:00","level":"INFO","msg":"handler: closed","stream_id":"gly46xf5"}
+{"time":"2025-03-02T12:06:01.8630121+08:00","level":"INFO","msg":"writer: Close: closed","stream_id":"gly46xf5"}
+{"time":"2025-03-02T12:06:01.8630121+08:00","level":"INFO","msg":"sender: closed","stream_id":"gly46xf5"}
+{"time":"2025-03-02T12:06:01.8630121+08:00","level":"INFO","msg":"stream: closed","id":"gly46xf5"}

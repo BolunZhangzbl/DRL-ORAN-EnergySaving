@@ -83,7 +83,10 @@ EPSILON_MIN = 0.01
 EPSILON_DECAY = 0.99
 
 # Size of the state space
-STATE_SPACE = 85
+STATE_SPACE = 50
 
 # Size of the action space
 ACTION_SPACE = 2**7
+
+# Reward threshold
+REWARD_THRESHOLD = 1000

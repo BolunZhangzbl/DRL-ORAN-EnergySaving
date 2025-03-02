@@ -1,11 +1,11 @@
 # -- Public Imports
 import os
-import yaml
 import random
+import pickle
 import numpy as np
+
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense, GaussianNoise, Lambda, Dropout, Concatenate, \
-    Reshape, Add, Embedding, Flatten, Conv1D, BatchNormalization, Embedding, LSTM, Activation
+from tensorflow.keras.layers import Input, Dense
 from tensorflow.keras.models import Model
 
 # -- Private Imports
@@ -18,15 +18,16 @@ from constants import *
 
 # Base Agent for DQN
 class BaseAgentDQN:
-    def __init__(self, state_space, action_space, action_mapper,
-                 buffer_capacity=int(1e4), batch_size=128):
-        self.state_space = state_space
-        self.action_space = action_space
-        self.action_mapper = action_mapper
+    def __init__(self, config):
+        self.state_space = config.state_space
+        self.action_space = config.action_space
+        self.action_mapper = ActionMapper(minVal=0, maxVal=self.action_space)
+
+        self.agent_type = config.agent
 
         # Buffer
-        self.buffer_capacity = buffer_capacity
-        self.batch_size = batch_size
+        self.buffer_capacity = config.buffer_capacity if hasattr(config, 'buffer_capacity') else int(1e4)
+        self.batch_size = config.batch_size if hasattr(config, 'batch_size') else 128
         self.buffer_counter = 0
 
         self.state_buffer = np.zeros((self.buffer_capacity, self.state_space))
@@ -35,13 +36,14 @@ class BaseAgentDQN:
         self.next_state_buffer = np.zeros((self.buffer_capacity, self.state_space))
 
         # Hyper-parameters
-        self.epsilon = 1.0
-        self.epsilon_min = 0.01
-        self.epsilon_decay = 0.99
-        # self.loss_func = tf.keras.losses.MeanSquaredError()
+        self.epsilon = config.epsilon
+        self.epsilon_min = config.epsilon_min
+        self.epsilon_decay = config.epsilon_decay
+        self.gamma = config.gamma  # Discount factor
+        self.learning_rate = config.dqn_lr  # Learning rate for the DQN network
+        self.optimizer = tf.keras.optimizers.Adam(learning_rate=self.learning_rate)
         self.loss_func = tf.keras.losses.Huber()
-        self.optimizer = tf.keras.optimizers.Adam(learning_rate=0.001)
-        self.gamma = 0.99  # Discount factor
+        # self.loss_func = tf.keras.losses.MeanSquaredError()
 
         # Create Deep Q Network
         self.model = self.create_model()
@@ -51,9 +53,9 @@ class BaseAgentDQN:
     def create_model(self):
         input_shape = (self.state_space,)
         X_input = Input(input_shape)
-        X = Dense(64, activation="relu")(X_input)
-        X = Dense(64, activation="relu")(X)
-        X = Dense(self.action_space, activation="linear")(X)
+        X = Dense(128, activation="relu")(X_input)
+        X = Dense(128, activation="relu")(X)
+        X = Dense(self.action_space, activation="softmax")(X)
         model = Model(inputs=X_input, outputs=X)
         return model
 
@@ -62,12 +64,15 @@ class BaseAgentDQN:
 
         index = self.buffer_counter % self.buffer_capacity
         self.state_buffer[index] = obs_tuple[0]
-        self.action_buffer[index] = obs_tuple[1] - self.action_mapper.minVal
+        self.action_buffer[index] = obs_tuple[1]
         self.reward_buffer[index] = obs_tuple[2]
         self.next_state_buffer[index] = obs_tuple[3]
         self.buffer_counter += 1
 
     def act(self, state):
+        if not isinstance(state, np.ndarray):
+            state = np.array(state)
+
         if state.ndim==1:
             state = np.expand_dims(state, axis=0)
 
@@ -80,7 +85,7 @@ class BaseAgentDQN:
             action_idx = tf.argmax(q_vals_dist).numpy()
 
         action = self.action_mapper.idx_to_bool_action(action_idx)
-        return action
+        return action, action_idx
 
     def sample(self):
         sample_indices = np.random.choice(min(self.buffer_counter, self.buffer_capacity), self.batch_size)
@@ -97,39 +102,21 @@ class BaseAgentDQN:
         state_sample, action_sample, reward_sample, next_state_sample = self.sample()
         action_sample_int = tf.cast(tf.squeeze(action_sample), tf.int32)
 
-        # print(f"state_sample: {state_sample}")
-        # print(f"action_sample: {action_sample_int}")
-        # print(f"reward_sample: {reward_sample}")
-        # print(f"next_state_sample: {next_state_sample}")
-
         target_q_vals = tf.reduce_max(self.target_model(next_state_sample), axis=1)
         y = reward_sample + tf.expand_dims(self.gamma * target_q_vals, axis=1)
         mask = tf.one_hot(action_sample_int, self.action_space)
 
         with tf.GradientTape() as tape:
             q_vals = self.model(state_sample)
-            # print(f"q_vals shape: {q_vals} - {q_vals.shape}")
-
-            # target_q_vals = tf.reduce_max(self.target_model(next_state_sample), axis=1)
-            # print(f"target_q_vals shape: {target_q_vals} - {target_q_vals.shape}")
-
-            # y = reward_sample + tf.expand_dims(self.gamma * target_q_vals, axis=1)
-            # print(f"reward_sample shape: {reward_sample} - {reward_sample.shape}")
-            # print(f"y shape: {y} - {y.shape}")
-
-            # mask = tf.one_hot(action_sample_int, self.action_space)
-            # print(f"mask shape: {mask} - {mask.shape}")
 
             q_action = tf.reduce_sum(tf.multiply(q_vals, mask), axis=1)
-            # print(f"q_action shape: {q_action} - {q_action.shape}")
 
             loss = self.loss_func(y, q_action)
-            # print(f"loss shape: {loss} - {loss.shape}\n\n")
 
         grads = tape.gradient(loss, self.model.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.model.trainable_variables))
 
-        return loss, q_vals
+        return loss
 
     @tf.function
     def update_target(self, tau=0.001):
@@ -138,12 +125,28 @@ class BaseAgentDQN:
         for (a, b) in zip(self.target_model.variables, self.model.variables):
             a.assign(b * tau + (1 - tau))
 
-    def save_model_weights(self):
-        file_path = f"save_dqn/rl/save_models/model_dqn.keras"
-        print(f"filepath: {file_path}")
-        self.model.save_model_weights(file_path)
+    def save_model(self):
 
-    def load_model_weights(self):
-        file_path = f"save_dqn/rl/save_models/model_dqn.keras"
-        print(f"filepath: {file_path}")
-        self.model.load_model_weights(file_path)
+        file_path = f"./models/dqn/model_dqn.pkl"
+        os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+        # Save the model and optimizer state
+        model_data = {
+            'model_architecture': self.model.get_config(),
+            'model_weights': self.model.get_weights(),
+        }
+
+        with open(file_path, 'wb') as f:
+            pickle.dump(model_data, f)
+
+        print(f"Model saved to {file_path}")
+
+    def load_model(self):
+        file_path = f"./models/dqn/model_dqn.pkl"
+        with open(file_path, 'rb') as f:
+            model_data = pickle.load(f)
+
+        self.model = Model.from_config(model_data.get('model_architecture'))
+        self.model.set_weights(model_data.get('model_weights'))
+
+        print(f"Model loaded from {file_path}")

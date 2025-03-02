@@ -373,7 +373,7 @@ class ORAN:
 
     def get_init_gnbs(self):
         gNBs = [gNB(2000, 2000)]
-        for idx_gnb in range(self.num_gnbs):
+        for idx_gnb in range(self.num_gnbs-1):
             angle = 2 * np.pi * idx_gnb / 6
             x = 2000 + self.radius * np.cos(angle)
             y = 2000 + self.radius * np.sin(angle)
