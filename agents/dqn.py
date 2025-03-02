@@ -5,7 +5,7 @@ import pickle
 import numpy as np
 
 import tensorflow as tf
-from tensorflow.keras.layers import Input, Dense
+from tensorflow.keras.layers import Input, Dense, Conv1D, Reshape, BatchNormalization, Flatten
 from tensorflow.keras.models import Model
 
 # -- Private Imports
@@ -51,12 +51,30 @@ class BaseAgentDQN:
         print(self.model.summary())
 
     def create_model(self):
-        input_shape = (self.state_space,)
+        input_shape = (self.state_space, 1)  # Add a channel dimension (1) for the CNN
+
+        # Input Layer
         X_input = Input(input_shape)
-        X = Dense(128, activation="relu")(X_input)
-        X = Dense(128, activation="relu")(X)
-        X = Dense(self.action_space, activation="softmax")(X)
-        model = Model(inputs=X_input, outputs=X)
+
+        # 1D Convolutional Layer
+        X = Conv1D(filters=32, kernel_size=3, activation="relu")(X_input)
+        X = Conv1D(filters=64, kernel_size=3, activation="relu")(X)
+        X = Conv1D(filters=128, kernel_size=3, activation="relu")(X)
+
+        # Flatten the output of the CNN to feed into Dense layers
+        X = Flatten()(X)
+
+        # Dense Layers
+        X = Dense(512, activation="relu")(X)
+        X = Dense(512, activation="relu")(X)
+        X = Dense(256, activation="relu")(X)
+
+        # Output Layer (action space size)
+        output = Dense(self.action_space, activation="linear")(X)
+
+        # Create Model
+        model = Model(inputs=X_input, outputs=output)
+
         return model
 
     def record(self, obs_tuple):
@@ -78,6 +96,7 @@ class BaseAgentDQN:
 
         self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
+
         if np.random.random() < self.epsilon:
             action_idx = np.random.choice(self.action_space)
         else:

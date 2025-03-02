@@ -12,14 +12,6 @@ from constants import *
 
 dir_root = str(Path(__file__).parent.parent)
 
-dict_filename = dict(
-    step_losses="step_losses.txt",
-    ep_losses="ep_losses.txt",
-    step_rewards="step_rewards.txt",
-    avg_rewards="avg_rewards.txt",
-    ep_rewards="ep_rewards.txt"
-)
-
 dict_ylabel = dict(
     step_losses="Loss",
     ep_losses='Episodic Loss',
@@ -49,7 +41,7 @@ dict_colors = dict(
 
 def plot_convergence(metric, agent_type, save=False):
 
-    assert metric in dict_filename.keys()
+    assert metric in dict_ylabel.keys()
 
     file_path = os.path.join(dir_root, f"lists/{agent_type}/training_metrics.npz")
     dict_data = np.load(file_path)
@@ -62,10 +54,10 @@ def plot_convergence(metric, agent_type, save=False):
                  mfc='none', alpha=0.8, lw=2, markersize=3, label=metric.upper())
 
     plt.yscale('linear')
-    plt.xlabel('Iter', fontsize=30)
+    plt.xlabel("Episode" if metric.startswith('ep') else "Step", fontsize=30)
     plt.ylabel(dict_ylabel.get(metric), fontsize=30)
-    # plt.xlim([0, 200])
-    # plt.ylim([10000, 12000])
+    # plt.xlim([1, 1000])
+    # plt.ylim([-400, 200])
     plt.xticks(fontsize=24)
     plt.yticks(fontsize=24)
     plt.legend(loc='best', fontsize=27)
@@ -79,4 +71,4 @@ def plot_convergence(metric, agent_type, save=False):
     plt.show()
 
 
-plot_convergence("ep_rewards", "dqn", save=False)
+plot_convergence("step_losses", "dqn", save=False)

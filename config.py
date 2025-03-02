@@ -21,10 +21,11 @@ def get_config():
     parser.add_argument('--dqn_lr', type=float, default=1e-3, help='Learning rate for the DQN network')
     parser.add_argument('--gamma', type=float, default=0.99, help='Discount factor for future rewards')
     parser.add_argument('--epsilon', type=float, default=1.0, help='Initial exploration rate (epsilon-greedy strategy)')
-    parser.add_argument('--epsilon_min', type=float, default=0.01, help='Minimum exploration rate')
+    parser.add_argument('--epsilon_min', type=float, default=0.1, help='Minimum exploration rate')
     parser.add_argument('--epsilon_decay', type=float, default=0.99, help='Decay rate for exploration rate')
     parser.add_argument('--state_space', type=int, default=50, help='Size of the state space')
     parser.add_argument('--action_space', type=int, default=2 ** NUM_GNB, help='Size of the action space')
+    parser.add_argument('--batch_size', type=int, default=256, help='Batch size for training')
     parser.add_argument('--seed', type=int, default=42, help='Random seed for reproducibility')
 
     # Add environment and agent arguments with restricted choices

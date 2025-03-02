@@ -192,7 +192,7 @@ class gNB:
         self.eta_PAM = 0.8  # Efficiency of the power amplifier
         self.n_ant = 32  # Number of antenna chains
 
-        # Default transmission power (watts)
+        # Default transmission power (W)
         self.power_tx = 40
 
         # Activation info

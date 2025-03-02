@@ -37,6 +37,8 @@ class ORANSimEnv:
         if reward >= REWARD_THRESHOLD:
             self.done = True
 
+        self.current_time += TIME_STEP
+
         return next_state, reward, self.done
 
     def reset(self):

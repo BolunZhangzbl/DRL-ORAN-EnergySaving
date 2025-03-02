@@ -52,41 +52,5 @@ TIME_STEP = 0.1
 # DRL Agent Configuration
 # ======================
 
-# Maximum number of steps per episode
-MAX_STEP = 50
-
-# Number of episodes for training
-NUM_EPISODES = 500
-
-# Number of last episodes to consider for evaluation
-LAST_N = 10
-
-# Learning rate for the actor network
-ACTOR_LR = 3e-4
-
-# Learning rate for the critic network
-CRITIC_LR = 1e-3
-
-# Learning rate for the DQN network
-DQN_LR = 1e-3
-
-# Discount factor for future rewards
-GAMMA = 0.99
-
-# Initial exploration rate (epsilon-greedy strategy)
-EPSILON = 1.0
-
-# Minimum exploration rate
-EPSILON_MIN = 0.01
-
-# Decay rate for exploration rate
-EPSILON_DECAY = 0.99
-
-# Size of the state space
-STATE_SPACE = 50
-
-# Size of the action space
-ACTION_SPACE = 2**7
-
 # Reward threshold
-REWARD_THRESHOLD = 1000
+REWARD_THRESHOLD = 1e6

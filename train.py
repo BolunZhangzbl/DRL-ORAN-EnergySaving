@@ -16,8 +16,8 @@ tf.get_logger().setLevel('ERROR')
 
 def run_drl(args):
     # Set seeds
-    np.random.seed(args.seed)
-    tf.keras.utils.set_random_seed(args.seed)
+    # np.random.seed(args.seed)
+    # tf.keras.utils.set_random_seed(args.seed)
 
     # Initialize wandb
     wandb.init(project="DRL-ORAN-Energy",
@@ -68,6 +68,7 @@ def run_drl(args):
                 "Episode": episode+1,
                 "Step": step+1,
                 "Step Reward": reward,
+                "Step Loss": loss,
             })
 
             # Terminate the episode if the environment signals completion
@@ -91,9 +92,10 @@ def run_drl(args):
 
         # Print training progress
         print(f"Episode {episode + 1}/{args.num_episodes}: "
-              f"Reward = {episode_reward}, "
-              f"Avg Reward = {avg_reward}"
-              f"Average Loss = {episode_loss / (step + 1):.4f}, ")
+              f"Episode Reward = {episode_reward}, "
+              f"Avg Reward = {avg_reward}, "
+              f"Average Loss = {episode_loss / (step + 1):.4f}, "
+              f"Action = {action_idx} ")
 
         # Save the model weights periodically
         if (episode + 1) % 10 == 0:
