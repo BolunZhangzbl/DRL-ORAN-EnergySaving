@@ -16,13 +16,8 @@ tf.get_logger().setLevel('ERROR')
 
 def run_drl(args):
     # Set seeds
-    # np.random.seed(args.seed)
-    # tf.keras.utils.set_random_seed(args.seed)
-
-    # Initialize wandb
-    wandb.init(project="DRL-ORAN-Energy",
-               name="DRL for Energy Saving in ORAN",
-               config=args)
+    np.random.seed(args.seed)
+    tf.keras.utils.set_random_seed(args.seed)
 
     # Initialize env and drl agent
     env = UnifiedEnv(env_type=args.env, config=None)
