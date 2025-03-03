@@ -44,6 +44,7 @@ class ORANSimEnv:
     def reset(self):
         self.oran = ORAN()
         self.current_time = 0
+        self.done = False
 
         return self.oran.get_state_oran()
 

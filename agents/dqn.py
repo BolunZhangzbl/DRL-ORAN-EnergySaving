@@ -48,6 +48,7 @@ class BaseAgentDQN:
         # Create Deep Q Network
         self.model = self.create_model()
         self.target_model = self.create_model()
+        self.target_model.set_weights(self.model.get_weights())
         print(self.model.summary())
 
     def create_model(self):
@@ -97,7 +98,8 @@ class BaseAgentDQN:
         self.epsilon *= self.epsilon_decay
         self.epsilon = max(self.epsilon_min, self.epsilon)
 
-        if np.random.random() < self.epsilon:
+        # if np.random.random() < self.epsilon:
+        if self.epsilon:
             action_idx = np.random.choice(self.action_space)
         else:
             q_vals_dist = self.model.predict(state, verbose=0)[0]

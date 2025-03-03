@@ -27,9 +27,6 @@ class RB:
             f"RB(rth={self.rth}, allocate_to={self.allocate_to})"
         )
 
-    def update_params(self, allocate_to):
-        self.allocate_to = allocate_to
-
     def reset(self):
         self.allocate_to = None
 
@@ -39,7 +36,7 @@ class UE:
     User Equipment (UE) class.
     """
 
-    def __init__(self, x: float, y: float, speed: float, traffic_type: str, serving_gnb):
+    def __init__(self, x, y, speed, traffic_type, serving_gnb):
         """
         Initialize a UE object.
         :param x: Initial x-coordinate of the UE.
@@ -94,7 +91,7 @@ class UE:
     def update_traffic(self, current_time):
         if self.traffic_type in ("udp_bursty", "tcp_bursty"):
             if current_time >= self.next_switch_time:
-                self.is_active = not self.is_active # Switch between on and off
+                self.is_active = not self.is_active  # Switch between on and off
                 self.next_switch_time = current_time + np.random.exponential(5)
         else:
             # TCP full-buffer traffic is always active
@@ -193,7 +190,7 @@ class gNB:
         self.n_ant = 32  # Number of antenna chains
 
         # Default transmission power (W)
-        self.power_tx = 40
+        self.power_tx = POWER_TX
 
         # Activation info
         self.is_active = False
@@ -201,9 +198,10 @@ class gNB:
 
         # KPMs
         self.throughput = 0
-        self.num_ues_rlf = 9
-        self.num_rbs_allocated = 0
+        self.power_consumption = 0
+        self.num_ues_rlf = 0
         self.activate_cost = 0
+        self.num_rbs_allocated = 0
 
     def add_ue(self, ue):
         self.UEs.append(ue)
@@ -236,7 +234,7 @@ class gNB:
 
     def set_power_tx(self):
 
-        self.power_tx = self.power_tx * (self.num_rbs_allocated / NUM_RBS)
+        self.power_tx = POWER_TX * (self.num_rbs_allocated / NUM_RBS)
 
     def get_throughput(self):
         """
@@ -244,6 +242,7 @@ class gNB:
         :return:
         """
         throughput = sum(ue.service_rate for ue in self.UEs)
+        self.throughput = throughput
 
         return throughput
 
@@ -253,7 +252,7 @@ class gNB:
         :return:
         """
         # Calculate PPAM_c(r) based on the number of RBs
-        PPAM_c = self.get_PPAM_c(self.num_rbs_allocated)
+        PPAM_c = self.get_PPAM_c()
 
         # Calculate PPAM
         PPAM = self.PPAM_0 * PPAM_c * self.eta_PAM * self.n_ant
@@ -261,10 +260,12 @@ class gNB:
         # Calculate total power consumption
         P_total = self.P0 + self.PRF + self.PBB + PPAM
 
+        self.power_consumption = P_total
+
         return P_total
 
-    def get_PPAM_c(self, num_rbs_allocated):
-        PPAM_c = num_rbs_allocated / NUM_RBS
+    def get_PPAM_c(self):
+        PPAM_c = self.num_rbs_allocated / NUM_RBS
 
         return PPAM_c
 
@@ -280,6 +281,8 @@ class gNB:
         num_ues_rlf = 0
         for ue in self.UEs:
             num_ues_rlf += int(ue.in_rlf)
+
+        self.num_ues_rlf = num_ues_rlf
 
         return num_ues_rlf
 
@@ -302,6 +305,8 @@ class gNB:
         active_time_interval_ms = self.active_time_interval * 1e3
         activate_cost = 0.9 ** (0.01 * active_time_interval_ms)
 
+        self.activate_cost = activate_cost
+
         return activate_cost
 
     def get_reward(self):
@@ -312,16 +317,22 @@ class gNB:
         w1, w2, w3, w4 = 0.4, 0.4, 0.1, 0.1
 
         if self.is_active == True:
+
             throughput = self.get_throughput()
             power_consumption = self.get_power_consumption()
             num_ues_rlf = self.get_num_ues_rlf()
             activate_cost = self.get_activate_cost()
 
+            # throughput = self.throughput
+            # power_consumption = self.power_consumption
+            # num_ues_rlf = self.num_ues_rlf
+            # activate_cost = self.activate_cost
+
             reward = w1 * throughput - w2 * power_consumption - w3 * num_ues_rlf - w4 * activate_cost
-            return reward
+            return reward, [throughput, power_consumption, num_ues_rlf, activate_cost]
 
         else:
-            return 0
+            return 0, None
 
     def get_state_gnb(self):
         """
@@ -386,7 +397,7 @@ class ORAN:
             for idx_ue in range(NUM_UES_PER_GNB):
                 # Random init position within 1700m radius of the central gNB
                 angle = np.random.uniform(0, 2 * np.pi)
-                radius = np.random.uniform(0, self.radius)
+                radius = np.random.uniform(0, self.radius/2)
                 x = 2000 + radius * np.cos(angle)
                 y = 2000 + radius * np.sin(angle)
 
@@ -416,6 +427,17 @@ class ORAN:
         # Update active status for all gNBs
         self.gnbs_active_status = gnbs_active_status
 
+        # Recycle unused RBs
+        self.recycle_rbs()
+
+        # Allocate RBs according to proportional policy
+        self.allocate_rbs()
+
+        # Update the number of RBs allocated for each gNB
+        for gnb in self.gNBs:
+            gnb.update_num_rbs_allocated()
+            gnb.set_power_tx()
+
         # Update gNBs and their UEs
         for idx_gnb, gnb in enumerate(self.gNBs):
             # Update active status for each gNB
@@ -437,15 +459,8 @@ class ORAN:
                 # Update delay based on buffer_size and service_rate
                 ue.update_delay()
 
-        # Recycle unused RBs
-        self.recycle_rbs()
-
-        # Allocate RBs according to proportional policy
-        self.allocate_rbs()
-
-        # Update the number of RBs allocated for each gNB
-        for gnb in self.gNBs:
-            gnb.update_num_rbs_allocated()
+                ue_buffer_size.append(ue.buffer_size)
+                ue_sinr.append(ue.sinr)
 
     def get_proportional_weights(self):
         """
@@ -478,17 +493,33 @@ class ORAN:
         Allocate RBs to UEs based on their proportional weights.
         :return:
         """
-        rbs_available = [rb.rth for rb in self.RBs if rb.allocate_to==None]
+        rbs_available = [rb.rth for rb in self.RBs if rb.allocate_to is None]
         num_rbs_available = len(rbs_available)
         proportional_weights = self.get_proportional_weights()
 
-        # Allocate RBs to each UE based on its proportional weight
-        for ue, weight in proportional_weights.items():
-            num_rbs_allocated = int(weight * num_rbs_available)
-            for idx in range(num_rbs_allocated):
+        if num_rbs_available == 0:
+            return
+
+        # Sort UEs by their proportional weights (descending)
+        sorted_ues = sorted(proportional_weights.keys(), key=lambda ue: proportional_weights[ue], reverse=True)
+
+        # Perform RBs allocation
+        idx_rb = 0
+        while idx_rb < num_rbs_available:
+            for ue in sorted_ues:
+                if idx_rb >= num_rbs_available:
+                    break
+                self.RBs[rbs_available[idx_rb]].allocate_to = ue
                 ue.num_rbs_allocated += 1
-                self.RBs[rbs_available[0]].allocate_to = ue
-                rbs_available.pop(0)
+                idx_rb += 1
+
+        # # Allocate RBs to each UE based on its proportional weight
+        # for ue, weight in proportional_weights.items():
+        #     num_rbs_allocated = int(weight * num_rbs_available)
+        #     for idx in range(num_rbs_allocated):
+        #         ue.num_rbs_allocated += 1
+        #         self.RBs[rbs_available[0]].allocate_to = ue
+        #         rbs_available.pop(0)
 
     def recycle_rbs(self):
         """
@@ -496,9 +527,11 @@ class ORAN:
         :return:
         """
         for rb in self.RBs:
-            if rb.allocate_to is not None and rb.allocate_to.buffer_size == 0:
-                rb.allocate_to.num_rbs_allocated -= 1
-                rb.allocate_to = None
+            if rb.allocate_to is not None:
+                if rb.allocate_to.buffer_size == 0 or not rb.allocate_to.is_active:
+                    rb.allocate_to.num_rbs_allocated -= 1
+                    rb.allocate_to.num_rbs_allocated = max(0, rb.allocate_to.num_rbs_allocated)
+                    rb.allocate_to = None
 
     def get_sum_reward(self):
         """
@@ -507,7 +540,8 @@ class ORAN:
         """
         sum_reward = 0
         for gnb in self.gNBs:
-            sum_reward += gnb.get_reward()
+            reward, kpms = gnb.get_reward()
+            sum_reward += reward
 
         return sum_reward
 

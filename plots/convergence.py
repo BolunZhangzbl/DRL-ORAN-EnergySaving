@@ -56,7 +56,7 @@ def plot_convergence(metric, agent_type, save=False):
     plt.yscale('linear')
     plt.xlabel("Episode" if metric.startswith('ep') else "Step", fontsize=30)
     plt.ylabel(dict_ylabel.get(metric), fontsize=30)
-    # plt.xlim([1, 1000])
+    # plt.xlim([10, 1000])
     # plt.ylim([-400, 200])
     plt.xticks(fontsize=24)
     plt.yticks(fontsize=24)
@@ -65,10 +65,10 @@ def plot_convergence(metric, agent_type, save=False):
 
     if save:
         filename_save = f"{metric}_convergence_{agent_type}.png"
-        filepath_save = os.path.join("./plots", "figures", filename_save)
+        filepath_save = os.path.join(dir_root, "plots", "figures", filename_save)
         plt.savefig(filepath_save, format='png', dpi=300)
 
     plt.show()
 
-
-plot_convergence("step_losses", "dqn", save=False)
+for key in dict_ylabel.keys():
+    plot_convergence(key, "dqn", save=True)

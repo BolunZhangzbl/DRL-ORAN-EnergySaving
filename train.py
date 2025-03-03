@@ -92,10 +92,10 @@ def run_drl(args):
 
         # Print training progress
         print(f"Episode {episode + 1}/{args.num_episodes}: "
-              f"Episode Reward = {episode_reward}, "
-              f"Avg Reward = {avg_reward}, "
-              f"Average Loss = {episode_loss / (step + 1):.4f}, "
-              f"Action = {action_idx} ")
+              f"Episode Reward = {episode_reward:.2e}, "
+              f"Avg Reward = {avg_reward:.2e}, "
+              f"Average Loss = {episode_loss / (step + 1):.2e}, "
+              f"Action = {action_idx}, ")
 
         # Save the model weights periodically
         if (episode + 1) % 10 == 0:

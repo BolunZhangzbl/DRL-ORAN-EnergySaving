@@ -19,7 +19,7 @@ BANDWIDTH = 20e6
 BANDWIDTH_PER_RB = 2e5
 
 # PRB Efficiency (in Mbps)
-RB_EFFICIENCY = 1e6
+RB_EFFICIENCY = 2e6
 
 # Number of gNBs in the ORAN system
 NUM_GNB = 7
@@ -33,8 +33,8 @@ INTER_DISTANCE_GNB = 1700
 # Number of UEs per gNB
 NUM_UES_PER_GNB = 9
 
-# Maximum transmit power of gNBs (in dBm)
-POWER_MAX = 15  # dBm
+# Maximum transmit power of gNBs (in W)
+POWER_TX = 40
 
 # Transmission Time Interval (TTI) (in seconds)
 TTI = 1e-3
@@ -53,4 +53,4 @@ TIME_STEP = 0.1
 # ======================
 
 # Reward threshold
-REWARD_THRESHOLD = 1e6
+REWARD_THRESHOLD = 1e8
