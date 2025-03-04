@@ -155,10 +155,11 @@ class UE:
 
     def get_path_loss(self, distance):
 
-        path_loss = 28.0 + 40.0 * np.log10(distance) + 20 * np.log10(CENTER_FREQ / 1e9)
+        # path_loss = 28.0 + 40.0 * np.log10(distance) + 20 * np.log10(CENTER_FREQ / 1e9)
+        path_loss = 20 * np.log10(distance) + 20 * np.log10(CENTER_FREQ / 1e9) + 20 * np.log10((4 * np.pi) / (3e8))
 
         # Add log-normal shadowing
-        shadowing = np.random.uniform(0, SHADOWING_STD)
+        shadowing = np.random.normal(0, SHADOWING_STD)
 
         path_loss += shadowing
 
@@ -471,6 +472,9 @@ class ORAN:
             print(f"Buffer size: {ue_buffer_size}")
             print(f"SINR: {ue_sinr}")
 
+        # Perform handover after all gNBs and UEs are updated
+        self.perform_handover()
+
     def get_proportional_weights(self):
         """
         Calculate proportional weights for all UEs
@@ -542,6 +546,74 @@ class ORAN:
                     rb.allocate_to.num_rbs_allocated -= 1
                     rb.allocate_to.num_rbs_allocated = max(0, rb.allocate_to.num_rbs_allocated)
                     rb.allocate_to = None
+
+    def perform_handover(self):
+        """
+        Perform handover for UEs based on SINR and Dynamic TTT.
+        When a gNB is activated or deactivated, UEs are redistributed
+        :return:
+        """
+        for gnb in self.gNBs:
+            # Only consider handover if gNB is inactive
+            if not gnb.is_active:
+                continue
+
+            for ue in gnb.UEs:
+                if ue.in_rlf:
+                    target_gnb = self.select_target_gnb(ue)
+
+                    if target_gnb:
+                        self.handover_ue(ue, target_gnb)
+
+    def select_target_gnb(self, ue):
+        """
+        Select a target gNB for handover baesd on SINR and dynamic TTT.
+        The TTT decreases proportionally with the SINR difference
+        :param ue:
+        :return:
+        """
+        target_gnb = None
+        best_sinr_diff = float('inf')
+
+        for gnb in self.gNBs:
+            if gnb == ue.serving_gnb:
+                continue
+
+            # Calculate SINR difference between the current gNB and target gnbs
+            sinr_diff = np.abs(ue.get_sinr([gnb]) - ue.get_sinr([ue.serving_gnb]))
+
+            # Calculate TTT based on SINR difference
+            ttt = max(0, 1 - sinr_diff)
+
+            # Select gNB with the best SINR difference
+            if sinr_diff < best_sinr_diff and ttt > 0:
+                best_sinr_diff = sinr_diff
+                target_gnb = gnb
+
+        return target_gnb
+
+    def handover_ue(self, ue, target_gnb):
+        """
+        Perform handover for UE from its current gNB to target gNB
+        :param ue:
+        :param target_gnb:
+        :return:
+        """
+        if target_gnb:
+            # Remove UE from the current gNB
+            ue.serving_gnb.UEs.remove(ue)
+            ue.serving_gnb.update_num_rbs_allocated()
+
+            # Add UE to the target gNB
+            target_gnb.add_ue(ue)
+            ue.serving_gnb = target_gnb
+            target_gnb.update_num_rbs_allocated()
+
+            # Reset UEs' RLF status
+            ue.reset()
+            print(f"Handover successful: UE moved from gNB {ue.serving_gnb} to gNB {target_gnb}")
+        else:
+            print("No suitable target gNB found for handover.")
 
     def get_sum_reward(self):
         """
