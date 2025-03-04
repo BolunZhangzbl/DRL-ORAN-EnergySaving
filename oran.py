@@ -143,7 +143,9 @@ class UE:
                 power_interference += 10 ** ((power_interference_dbm - 30) / 10)
 
         # Calculate SINR
-        sinr = power_rx / (power_interference + power_noise)
+        sinr_linear = power_rx / (power_interference + power_noise)
+
+        sinr = 10 * np.log10(sinr_linear)
 
         # Update RLF info
         self.in_rlf = True if sinr < self.rlf_threshold else False
