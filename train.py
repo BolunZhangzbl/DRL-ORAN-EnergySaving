@@ -16,8 +16,13 @@ tf.get_logger().setLevel('ERROR')
 
 def run_drl(args):
     # Set seeds
-    np.random.seed(args.seed)
-    tf.keras.utils.set_random_seed(args.seed)
+    # np.random.seed(args.seed)
+    # tf.keras.utils.set_random_seed(args.seed)
+
+    # Initialize wandb
+    wandb.init(project="DRL-ORAN-Energy",
+               name="DRL for Energy Saving in ORAN",
+               config=args)
 
     # Initialize env and drl agent
     env = UnifiedEnv(env_type=args.env, config=None)
@@ -65,6 +70,13 @@ def run_drl(args):
                 "Step Reward": reward,
                 "Step Loss": loss,
             })
+            print(f"State 0: {state[:7]}\n"
+                  f"State 1: {state[7:14]}\n"
+                  f"State 2: {state[14:21]}\n"
+                  f"State 3: {state[21:28]}\n"
+                  f"State 4: {state[28:35]}\n"
+                  f"State 5: {state[35:42]}\n"
+                  f"State 6: {state[42:49]}\n")
 
             # Terminate the episode if the environment signals completion
             if done:

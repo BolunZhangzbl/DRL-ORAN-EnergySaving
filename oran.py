@@ -143,7 +143,9 @@ class UE:
                 power_interference += 10 ** ((power_interference_dbm - 30) / 10)
 
         # Calculate SINR
-        sinr = power_rx / (power_interference + power_noise)
+        sinr_linear = power_rx / (power_interference + power_noise)
+
+        sinr = 10 * np.log10(sinr_linear)
 
         # Update RLF info
         self.in_rlf = True if sinr < self.rlf_threshold else False
@@ -438,6 +440,9 @@ class ORAN:
             gnb.update_num_rbs_allocated()
             gnb.set_power_tx()
 
+        ue_buffer_size = []
+        ue_sinr = []
+
         # Update gNBs and their UEs
         for idx_gnb, gnb in enumerate(self.gNBs):
             # Update active status for each gNB
@@ -461,6 +466,10 @@ class ORAN:
 
                 ue_buffer_size.append(ue.buffer_size)
                 ue_sinr.append(ue.sinr)
+
+            print("UE info:\n")
+            print(f"Buffer size: {ue_buffer_size}")
+            print(f"SINR: {ue_sinr}")
 
     def get_proportional_weights(self):
         """
@@ -500,6 +509,7 @@ class ORAN:
         if num_rbs_available == 0:
             return
 
+        print(f"num_rbs_available: {num_rbs_available}")
         # Sort UEs by their proportional weights (descending)
         sorted_ues = sorted(proportional_weights.keys(), key=lambda ue: proportional_weights[ue], reverse=True)
 
@@ -542,6 +552,8 @@ class ORAN:
         for gnb in self.gNBs:
             reward, kpms = gnb.get_reward()
             sum_reward += reward
+
+            print(f"KPMs: {kpms}")
 
         return sum_reward
 
