@@ -53,7 +53,7 @@ def plot_convergence(metric, agent_type, save=False):
     plt.semilogy(xaxis, data, dict_markers.get(metric), color=dict_colors.get(metric),
                  mfc='none', alpha=0.8, lw=2, markersize=3, label=metric.upper())
 
-    plt.yscale('linear')
+    plt.yscale('log')
     plt.xlabel("Episode" if metric.startswith('ep') else "Step", fontsize=30)
     plt.ylabel(dict_ylabel.get(metric), fontsize=30)
     # plt.xlim([10, 1000])

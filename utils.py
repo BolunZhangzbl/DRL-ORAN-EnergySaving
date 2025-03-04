@@ -87,3 +87,12 @@ def saves_lists(file_path, ep_rewards, step_rewards, avg_rewards,
              step_losses=np.array(step_losses))
 
     print(f"Successfully saved lists in {file_path}!!!")
+
+
+def w_to_dbm(P_w):
+    P_dbm = 10 * np.log10(P_w / 1e-3)
+    return P_dbm
+
+def dbm_to_w(P_dbm):
+    P_w = 10 ** ((P_dbm - 30) / 10)
+    return P_w

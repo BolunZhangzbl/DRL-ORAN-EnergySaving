@@ -122,36 +122,30 @@ class UE:
 
     def get_sinr(self, gNBs):
         # Constants
-        power_noise = BANDWIDTH_PER_RB * NOISE_POWER_DENSITY   # Noise power in watts
+        power_noise_dbm = 10 * np.log10(BANDWIDTH_PER_RB * NOISE_POWER_DENSITY)  # Noise power in dBm
 
         # Calculate received power from the serving gNB
         serving_gNB = self.serving_gnb
         distance = np.sqrt((self.x - serving_gNB.x)**2 + (self.y - serving_gNB.y)**2)
         path_loss = self.get_path_loss(distance)
-        power_rx_dbm = serving_gNB.power_tx - path_loss
-
-        # Convert received power to linear scale watts
-        power_rx = 10 ** ((power_rx_dbm - 30) / 10)
+        power_rx_dbm = w_to_dbm(serving_gNB.power_tx) - path_loss
 
         # Calculate interference from neighbouring gNBs
-        power_interference = 0
+        power_interference_dbm = 0
         for gNB in gNBs:
             if gNB != serving_gNB:
                 distance = np.sqrt((self.x - gNB.x)**2 + (self.y - gNB.y)**2)
                 path_loss = self.get_path_loss(distance)
-                power_interference_dbm = gNB.power_tx - path_loss
-                power_interference += 10 ** ((power_interference_dbm - 30) / 10)
+                power_interference_dbm += w_to_dbm(gNB.power_tx) - path_loss
 
         # Calculate SINR
-        sinr_linear = power_rx / (power_interference + power_noise)
-
-        sinr = 10 * np.log10(sinr_linear)
+        sinr_db = power_rx_dbm - (power_interference_dbm + power_noise_dbm)
 
         # Update RLF info
-        self.in_rlf = True if sinr < self.rlf_threshold else False
-        self.sinr = sinr
+        self.in_rlf = True if sinr_db < self.rlf_threshold else False
+        self.sinr = sinr_db
 
-        return sinr
+        return sinr_db
 
     def get_path_loss(self, distance):
 
@@ -193,7 +187,7 @@ class gNB:
         self.n_ant = 32  # Number of antenna chains
 
         # Default transmission power (W)
-        self.power_tx = POWER_TX
+        self.power_tx = POWER_TX_W
 
         # Activation info
         self.is_active = False
@@ -237,7 +231,7 @@ class gNB:
 
     def set_power_tx(self):
 
-        self.power_tx = POWER_TX * (self.num_rbs_allocated / NUM_RBS)
+        self.power_tx = POWER_TX_W * (self.num_rbs_allocated / NUM_RBS)
 
     def get_throughput(self):
         """

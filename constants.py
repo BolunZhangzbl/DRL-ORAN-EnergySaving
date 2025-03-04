@@ -33,14 +33,17 @@ INTER_DISTANCE_GNB = 1700
 # Number of UEs per gNB
 NUM_UES_PER_GNB = 9
 
-# Maximum transmit power of gNBs (in W)
-POWER_TX = 40
+# Maximum transmit power of gNBs (in dBm)
+POWER_TX_DBM = 46.02
+
+# Maximum transmit power of gNBs (in watts)
+POWER_TX_W = 40
 
 # Transmission Time Interval (TTI) (in seconds)
 TTI = 1e-3
 
 # Noise power density (in W/Hz)
-NOISE_POWER_DENSITY = 3.98e-21
+NOISE_POWER_DENSITY = 3.98e-18
 
 # Std for shadowing (in dB)
 SHADOWING_STD = 8
