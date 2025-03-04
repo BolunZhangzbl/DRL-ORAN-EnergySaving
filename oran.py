@@ -459,9 +459,6 @@ class ORAN:
                 # Update delay based on buffer_size and service_rate
                 ue.update_delay()
 
-                ue_buffer_size.append(ue.buffer_size)
-                ue_sinr.append(ue.sinr)
-
     def get_proportional_weights(self):
         """
         Calculate proportional weights for all UEs

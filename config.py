@@ -14,7 +14,7 @@ def get_config():
 
     # Add arguments for each configuration parameter
     parser.add_argument('--max_step', type=int, default=100, help='Maximum number of steps per episode')
-    parser.add_argument('--num_episodes', type=int, default=2, help='Number of episodes for training')
+    parser.add_argument('--num_episodes', type=int, default=100, help='Number of episodes for training')
     parser.add_argument('--last_n', type=int, default=10, help='Number of last episodes to consider for evaluation')
     parser.add_argument('--actor_lr', type=float, default=3e-4, help='Learning rate for the actor network')
     parser.add_argument('--critic_lr', type=float, default=1e-3, help='Learning rate for the critic network')
