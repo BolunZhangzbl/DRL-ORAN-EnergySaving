@@ -15,9 +15,11 @@ class RB:
     """
     Resource Block contains info
     """
-    def __init__(self, rth):
-        self.rth = rth   # the idx of the RB
+    def __init__(self, rth, time_idx, freq_idx):
+        self.rth = rth               # the idx of the RB
         self.allocate_to = None      # UE to which the RB is allocated to
+        self.time_idx = time_idx     # Time idx in the grid (t)
+        self.freq_idx = freq_idx     # Frequency idx in the grid (f)
 
     def __str__(self):
         """

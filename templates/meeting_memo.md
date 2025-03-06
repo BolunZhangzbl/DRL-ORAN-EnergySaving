@@ -38,8 +38,9 @@ power_interference_dbm = gNB.power_tx - path_loss
 
 6. Debug the convergence of DQN: why loss and reward do not follow the same trend? why action is fixed at last?
 
-7. Do visulization of BS deployment, user mobility, and activation states.
+7. Do visualization of BS deployment, user mobility, and activation states.
 
+   * Develop render member function in env to visualize the BS, and UE info
    
 
 ## Questions:
