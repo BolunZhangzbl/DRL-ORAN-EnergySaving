@@ -48,6 +48,25 @@ class ORANSimEnv:
 
         return self.oran.get_state_oran()
 
+    def render(self):
+        """
+        Render the environment in text format showing gNB and UE positions and statuses.
+        """
+        print(f"\n--- ORAN System at Time {self.current_time}s ---\n")
+
+        # Display gNBs info
+        for idx, gnb in enumerate(self.oran.gNBs):
+            active_status = "Active" if self.oran.gnbs_active_status[idx] else "Inactive"
+            print(f"gNB-{idx + 1} (Position: ({gnb.x:.2f}, {gnb.y:.2f})) - {active_status}")
+
+            # Display UEs info for each gNB
+            print(f"  UEs connected to gNB-{idx + 1}:")
+            for ue in gnb.UEs:
+                traffic_type = ue.traffic_type
+                print(f"    UE (Position: ({ue.x:.2f}, {ue.y:.2f}), Traffic: {traffic_type})")
+
+        print("\n-------------------------------------------")
+
 
 class ORANTestbedEnv:
     """
