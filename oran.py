@@ -285,7 +285,8 @@ class gNB:
 
     def get_percentage_rlf(self, num_ues_rlf=None):
         num_ues_total = len(self.UEs)
-        num_ues_rlf = self.get_num_ues_rlf() if num_ues_rlf==None else num_ues_rlf
+        if num_ues_rlf is None:
+            num_ues_rlf = self.get_num_ues_rlf()
 
         percentage_rlf = num_ues_rlf / num_ues_total
 
