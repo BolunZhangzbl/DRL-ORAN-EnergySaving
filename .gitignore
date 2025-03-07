@@ -1,2 +1,6 @@
 wandb/
 lists/
+
+*.pyc
+*.pyo
+__pycache__/
